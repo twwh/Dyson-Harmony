@@ -55,12 +55,13 @@ metadata {
 				attributeState("idle", backgroundColor:"#44b621")
 				attributeState("heating", backgroundColor:"#e86d13")
 				attributeState("cooling", backgroundColor:"#00A0DC")
-                attributeState("dyson cooling", backgroundColor:"#00d8dc")
+                attributeState("dyson cooling", backgroundColor:"#00aaad")
 			}
 			tileAttribute("device.thermostatMode", key: "THERMOSTAT_MODE") {
 				attributeState("off", label:'${name}')
 				attributeState("heat", label:'${name}')
 				attributeState("cool", label:'${name}')
+                attributeState("dyson", label:'${name}')
 				attributeState("auto", label:'${name}')
 			}
 			tileAttribute("device.heatingSetpoint", key: "HEATING_SETPOINT") {
@@ -100,10 +101,11 @@ metadata {
 			state "off", label:'Off', action:"thermostat.auto", backgroundColor:"#ffffff"
 			state "heat", label:'Heat', action:"thermostat.off", backgroundColor:"#e86d13"
 			state "cool", label:'Cool', action:"thermostat.off", backgroundColor:"#00A0DC"
-			state "auto", label:'Auto', action:"thermostat.off", backgroundColor:"#00A0DC"
+			state "auto", label:'Auto', action:"thermostat.off", backgroundColor:"#44b621"
+            state "dyson", label:'Dyson', action:"thermostat.off", backgroundColor:"#00aaad"
 		}
 		valueTile("CO2", "device.CO2Alert", width: 2, height: 2) {
-    		state "safe", label: 'Safe', backgroundColor:"#ffffff"
+    		state "safe", label: 'Safe', backgroundColor:"#44b621"
             state "moderate", lablel: 'Moderate', backgroundColor:"#f1d801"
             state "harmful", label: 'Harmful', backgroundColor:"#bc2323"
         }
@@ -130,26 +132,26 @@ def installed() {
 	sendEvent(name: "humidity", value: 53, unit: "%")
     sendEvent(name: "humiditySetpoint", value: 55, unit: "%")
     sendEvent(name: "humidifier", value: "off")
-    sendEvent(name: "humidifier", value: "safe")
+    sendEvent(name: "CO2Alert", value: "safe")
 }
 
 def evaluate(temp, heatingSetpoint, coolingSetpoint) {
 	def mode = device.currentValue("thermostatMode")
     
-	if (mode in ["auto","heat","cool"]) {
-		if (heatingSetpoint > temp) {
+	if (mode in ["auto","heat","cool","dyson"]) {
+		if (heatingSetpoint >= temp) {
 			sendEvent(name: "thermostatOperatingState", value: "heating")
             sendEvent(name: "thermostatMode", value: "heat")
 		}
-		else if ((heatingSetpoint < temp) && (temp < coolingSetpoint)) {
+		else if ((heatingSetpoint < temp) && (temp < coolingSetpoint - 2)) {
             sendEvent(name: "thermostatOperatingState", value: "idle")
             sendEvent(name: "thermostatMode", value: "auto")
 		}
-		else if ((temp > coolingSetpoint) && (temp < (coolingSetpoint - 2))) {
+		else if ((temp < coolingSetpoint) && (temp >= (coolingSetpoint - 2))) {
 			sendEvent(name: "thermostatOperatingState", value: "dyson cooling")
-		    sendEvent(name: "thermostatMode", value: "cool")
+		    sendEvent(name: "thermostatMode", value: "dyson")
         }
-		else if (temp > (coolingSetpoint - 2)) {
+		else if (temp >= coolingSetpoint) {
 			sendEvent(name: "thermostatOperatingState", value: "cooling")
             sendEvent(name: "thermostatMode", value: "cool")
 		}
@@ -184,7 +186,7 @@ def setCoolingSetpoint(value) {
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), value)
 }
 
-def setThermostatMode(String value) {
+def setThermostatMode(value) {
 	sendEvent(name: "thermostatMode", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
@@ -206,6 +208,11 @@ def auto() {
 
 def cool() {
 	sendEvent(name: "thermostatMode", value: "cool")
+	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+}
+
+def dyson() {
+	sendEvent(name: "thermostatMode", value: "dyson")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
@@ -279,6 +286,6 @@ def on() {
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
-def setCO2Alert(String value){
+def setCO2Alert(value){
 		sendEvent(name: "CO2Alert", value: value)
 }
