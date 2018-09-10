@@ -32,11 +32,12 @@ metadata {
         command "setTemperatureReport", ["number"]
         command "setHumidity", ["number"]
         command "setHumiditySetpoint", ["number"]
-        command "setCO2Alert", ["string"]
+        command "setCO2Alert", ["number"]
+        command "CO2up"
 
         attribute "humiditySetpoint", "number"
         attribute "humidifier", "enum", ["on", "off"]
-        attribute "CO2Alert", "string"
+        attribute "CO2Alert", "number"
 	}
     
 	tiles(scale: 2) {
@@ -55,7 +56,7 @@ metadata {
 				attributeState("idle", backgroundColor:"#44b621")
 				attributeState("heating", backgroundColor:"#e86d13")
 				attributeState("cooling", backgroundColor:"#00A0DC")
-                attributeState("dyson cooling", backgroundColor:"#00aaad")
+                attributeState("dyson", backgroundColor:"#00aaad")
 			}
 			tileAttribute("device.thermostatMode", key: "THERMOSTAT_MODE") {
 				attributeState("off", label:'${name}')
@@ -105,9 +106,10 @@ metadata {
             state "dyson", label:'Dyson', action:"thermostat.off", backgroundColor:"#00aaad"
 		}
 		valueTile("CO2", "device.CO2Alert", width: 2, height: 2) {
-    		state "safe", label: 'Safe', backgroundColor:"#44b621"
-            state "moderate", lablel: 'Moderate', backgroundColor:"#f1d801"
-            state "harmful", label: 'Harmful', backgroundColor:"#bc2323"
+    		state "1", label: 'Safe', backgroundColor:"#44b621"
+            state "2", label: 'Moderate', backgroundColor:"#f1d801"
+            state "3", label: 'Cautious', backgroundColor: "#f07800"
+            state "4", label: 'Harmful', backgroundColor:"#bc2323"
         }
 
 		main("temperature")
@@ -132,7 +134,7 @@ def installed() {
 	sendEvent(name: "humidity", value: 53, unit: "%")
     sendEvent(name: "humiditySetpoint", value: 55, unit: "%")
     sendEvent(name: "humidifier", value: "off")
-    sendEvent(name: "CO2Alert", value: "safe")
+    sendEvent(name: "CO2Alert", value: "1")
 }
 
 def evaluate(temp, heatingSetpoint, coolingSetpoint) {
@@ -148,7 +150,7 @@ def evaluate(temp, heatingSetpoint, coolingSetpoint) {
             sendEvent(name: "thermostatMode", value: "auto")
 		}
 		else if ((temp < coolingSetpoint) && (temp >= (coolingSetpoint - 2))) {
-			sendEvent(name: "thermostatOperatingState", value: "dyson cooling")
+			sendEvent(name: "thermostatOperatingState", value: "dyson")
 		    sendEvent(name: "thermostatMode", value: "dyson")
         }
 		else if (temp >= coolingSetpoint) {
@@ -168,11 +170,15 @@ def evaluate2 (thermostatSetpoint, heatingSetpoint, coolingSetpoint){
 }
 
 def evaluate3 (humidity, humiditysetpoint, humidifier){
-	if (humidity < humiditysetpoint){
-    	sendEvent(name: "humidifier", value: "on")
-    }
-    else {
-    	sendEvent(name: "humidifier", value: "off")
+	def mode = device.currentValue("thermostatMode")
+	
+    if (mode in ["auto","heat","cool","dyson"]) {
+    	if (humidity <= humiditysetpoint){
+    		sendEvent(name: "humidifier", value: "on")
+    	}
+   	 	else if (humidity > humiditysetpoint){
+    		sendEvent(name: "humidifier", value: "off")
+    	}
     }
 }
 
@@ -193,7 +199,6 @@ def setThermostatMode(value) {
 
 def off() {
 	sendEvent(name: "thermostatMode", value: "off")
-	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
 def heat() {
@@ -218,7 +223,7 @@ def dyson() {
 
 def tempUp() {
 	def ts = device.currentState("thermostatSetpoint")
-	def value = ts ? ts.integerValue + 1 : 40
+	def value = ts.integerValue + 1
 	sendEvent(name:"thermostatSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
     evaluate2 (value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
@@ -226,7 +231,7 @@ def tempUp() {
 
 def tempDown() {
 	def ts = device.currentState("thermostatSetpoint")
-	def value = ts ? ts.integerValue - 1 : 40
+	def value = ts.integerValue - 1
 	sendEvent(name:"thermostatSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
     evaluate2 (value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
@@ -240,28 +245,28 @@ def setTemperature(value) {
 
 def heatUp() {
 	def ts = device.currentState("heatingSetpoint")
-	def value = ts ? ts.integerValue + 1 : 40
+	def value = ts.integerValue + 1
 	sendEvent(name:"heatingSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), value, device.currentValue("coolingSetpoint"))
 }
 
 def heatDown() {
 	def ts = device.currentState("heatingSetpoint")
-	def value = ts ? ts.integerValue - 1 : 40
+	def value = ts.integerValue - 1
 	sendEvent(name:"heatingSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), value, device.currentValue("coolingSetpoint"))
 }
 
 def coolUp() {
 	def ts = device.currentState("coolingSetpoint")
-	def value = ts ? ts.integerValue + 1 : 40
+	def value = ts.integerValue + 1
 	sendEvent(name:"coolingSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), value)
 }
 
 def coolDown() {
 	def ts = device.currentState("coolingSetpoint")
-	def value = ts ? ts.integerValue - 1 : 40
+	def value = ts.integerValue - 1
 	sendEvent(name:"coolingSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), value)
 }
@@ -284,8 +289,16 @@ def setHumiditySetpoint (value) {
 def on() {
 	sendEvent(name: "thermostatMode", value: "auto")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+    evaluate3 (device.currentValue("humidity"), device.currentValue("humiditysetpoint"), device.currentValue("humidifier"))
 }
 
 def setCO2Alert(value){
 		sendEvent(name: "CO2Alert", value: value)
+}
+
+def CO2up(){
+	def ts = device.currentState("CO2Alert")
+	def value = ts.integerValue + 1
+    def value2 = (value > 4) ? 4 : value
+	sendEvent(name:"CO2Alert", value: value2)
 }
