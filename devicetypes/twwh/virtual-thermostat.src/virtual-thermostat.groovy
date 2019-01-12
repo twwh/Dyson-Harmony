@@ -20,7 +20,6 @@ metadata {
 
 		capability "Thermostat"
 		capability "Relative Humidity Measurement"
-        capability "Switch"
 
 		command "tempUp"
 		command "tempDown"
@@ -62,8 +61,9 @@ metadata {
 				attributeState("off", label:'${name}')
 				attributeState("heat", label:'${name}')
 				attributeState("cool", label:'${name}')
-                attributeState("dyson", label:'${name}')
+                attributeState("eco", label:'${name}')
 				attributeState("auto", label:'${name}')
+                attributeState("itlz", label:'initializing')
 			}
 			tileAttribute("device.heatingSetpoint", key: "HEATING_SETPOINT") {
 				attributeState("heatingSetpoint", label:'${currentValue}°C', defaultState: true)
@@ -99,11 +99,12 @@ metadata {
             state "level", label:'Humidify to ${currentValue}%', unit: "%", action:"setHumiditySetpoint", backgroundColor: "#153591"
     	}
         standardTile("mode", "device.thermostatMode", width: 2, height: 2, inactiveLabel: false, decoration: "flat") {
-			state "off", label:'Off', action:"thermostat.auto", backgroundColor:"#ffffff"
+			state "off", label:'Off', action:"thermostat.fanOn", backgroundColor:"#ffffff"
 			state "heat", label:'Heat', action:"thermostat.off", backgroundColor:"#e86d13"
 			state "cool", label:'Cool', action:"thermostat.off", backgroundColor:"#00A0DC"
 			state "auto", label:'Auto', action:"thermostat.off", backgroundColor:"#44b621"
-            state "dyson", label:'Dyson', action:"thermostat.off", backgroundColor:"#00aaad"
+            state "eco", label:'Dyson', action:"thermostat.off", backgroundColor:"#00aaad"
+            state "itlz", label:'Evaluate', backgroundColor:"#ffffff"
 		}
 		valueTile("CO2", "device.CO2Alert", width: 2, height: 2) {
     		state "1", label: 'Safe', backgroundColor:"#44b621"
@@ -140,7 +141,7 @@ def installed() {
 def evaluate(temp, heatingSetpoint, coolingSetpoint) {
 	def mode = device.currentValue("thermostatMode")
     
-	if (mode in ["auto","heat","cool","dyson"]) {
+	if (mode in ["auto","heat","cool","eco","itlz"]) {
 		if (heatingSetpoint >= temp) {
 			sendEvent(name: "thermostatOperatingState", value: "heating")
             sendEvent(name: "thermostatMode", value: "heat")
@@ -151,7 +152,7 @@ def evaluate(temp, heatingSetpoint, coolingSetpoint) {
 		}
 		else if ((temp < coolingSetpoint) && (temp >= (coolingSetpoint - 2))) {
 			sendEvent(name: "thermostatOperatingState", value: "dyson")
-		    sendEvent(name: "thermostatMode", value: "dyson")
+		    sendEvent(name: "thermostatMode", value: "eco")
         }
 		else if (temp >= coolingSetpoint) {
 			sendEvent(name: "thermostatOperatingState", value: "cooling")
@@ -172,7 +173,7 @@ def evaluate2 (thermostatSetpoint, heatingSetpoint, coolingSetpoint){
 def evaluate3 (humidity, humiditysetpoint, humidifier){
 	def mode = device.currentValue("thermostatMode")
 	
-    if (mode in ["auto","heat","cool","dyson"]) {
+    if (mode in ["auto","heat","cool","eco","itlz"]) {
     	if (humidity <= humiditysetpoint){
     		sendEvent(name: "humidifier", value: "on")
     	}
@@ -216,8 +217,8 @@ def cool() {
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
-def dyson() {
-	sendEvent(name: "thermostatMode", value: "dyson")
+def eco() {
+	sendEvent(name: "thermostatMode", value: "eco")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
@@ -286,8 +287,8 @@ def setHumiditySetpoint (value) {
     evaluate3 (device.currentValue("humidity"), value, device.currentValue("humidifier"))
 }
 
-def on() {
-	sendEvent(name: "thermostatMode", value: "auto")
+def fanOn() {
+	sendEvent(name: "thermostatMode", value: "itlz")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
     evaluate3 (device.currentValue("humidity"), device.currentValue("humiditysetpoint"), device.currentValue("humidifier"))
 }
