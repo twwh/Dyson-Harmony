@@ -20,6 +20,7 @@ metadata {
 
 		capability "Thermostat"
 		capability "Relative Humidity Measurement"
+        capability "Switch"
 
 		command "tempUp"
 		command "tempDown"
@@ -99,7 +100,7 @@ metadata {
             state "level", label:'Humidify to ${currentValue}%', unit: "%", action:"setHumiditySetpoint", backgroundColor: "#153591"
     	}
         standardTile("mode", "device.thermostatMode", width: 2, height: 2, inactiveLabel: false, decoration: "flat") {
-			state "off", label:'Off', action:"thermostat.fanOn", backgroundColor:"#ffffff"
+			state "off", label:'Off', action:"on", backgroundColor:"#ffffff"
 			state "heat", label:'Heat', action:"thermostat.off", backgroundColor:"#e86d13"
 			state "cool", label:'Cool', action:"thermostat.off", backgroundColor:"#00A0DC"
 			state "auto", label:'Auto', action:"thermostat.off", backgroundColor:"#44b621"
@@ -287,7 +288,7 @@ def setHumiditySetpoint (value) {
     evaluate3 (device.currentValue("humidity"), value, device.currentValue("humidifier"))
 }
 
-def fanOn() {
+def on() {
 	sendEvent(name: "thermostatMode", value: "itlz")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
     evaluate3 (device.currentValue("humidity"), device.currentValue("humiditysetpoint"), device.currentValue("humidifier"))
