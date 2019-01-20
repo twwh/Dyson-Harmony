@@ -16,9 +16,8 @@
  
 metadata {
 	definition (name: "Dyson Harmony", namespace: "twwh", author: "Tony Wong") {
-		capability "Actuator"
-		capability "Sensor"
-        capability "thermostatMode"
+        capability "Thermostat"
+        capability "Switch"
 	}
 
 	tiles(scale:2) {
