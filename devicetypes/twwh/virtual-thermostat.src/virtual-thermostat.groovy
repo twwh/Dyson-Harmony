@@ -183,7 +183,6 @@ def evaluate2(thermostatSetpoint, heatingSetpoint, coolingSetpoint){
 
 def evaluate3(humidity, humiditySetpoint, humidifier){
 	def mode = device.currentValue("thermostatMode")
-	
     if (mode in ["auto","heat","cool"]) {
     	if (humidity <= humiditySetpoint){
     		sendEvent(name: "humidifier", value: "on")
@@ -211,6 +210,7 @@ def setThermostatMode(value) {
 
 def off() {
 	sendEvent(name: "thermostatMode", value: "off")
+    sendEvent(name: "humidifier", value: "off")
 }
 
 def heat() {
