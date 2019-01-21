@@ -172,7 +172,7 @@ def evaluate(temp, heatingSetpoint, coolingSetpoint) {
     }
 }
 
-def evaluate2 (thermostatSetpoint, heatingSetpoint, coolingSetpoint){
+def evaluate2(thermostatSetpoint, heatingSetpoint, coolingSetpoint){
 	if (thermostatSetpoint < heatingSetpoint){
     	sendEvent(name: "heatingSetpoint", value: thermostatSetpoint)
     }
@@ -181,7 +181,7 @@ def evaluate2 (thermostatSetpoint, heatingSetpoint, coolingSetpoint){
     }
 }
 
-def evaluate3 (humidity, humiditySetpoint, humidifier){
+def evaluate3(humidity, humiditySetpoint, humidifier){
 	def mode = device.currentValue("thermostatMode")
 	
     if (mode in ["auto","heat","cool"]) {
@@ -233,7 +233,7 @@ def tempUp() {
 	def value = ts.integerValue + 1
 	sendEvent(name:"thermostatSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
-    evaluate2 (value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+    evaluate2(value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
 def tempDown() {
@@ -241,13 +241,13 @@ def tempDown() {
 	def value = ts.integerValue - 1
 	sendEvent(name:"thermostatSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
-    evaluate2 (value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+    evaluate2(value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
 def setTemperature(value) {
 	sendEvent(name:"thermostatSetpoint", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
-	evaluate2 (value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+	evaluate2(value, device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
 def heatUp() {
@@ -285,18 +285,18 @@ def setTemperatureReport(value) {
 
 def setHumidity (value) {
 	sendEvent(name:"humidity", value: value)
-	evaluate3 (value, device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
+	evaluate3(value, device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
 }
 
 def setHumiditySetpoint (value) {
  	sendEvent(name: "humiditySetpoint", value: value)
-    evaluate3 (device.currentValue("humidity"), value, device.currentValue("humidifier"))
+    evaluate3(device.currentValue("humidity"), value, device.currentValue("humidifier"))
 }
 
 def on() {
 	sendEvent(name: "thermostatMode", value: "auto")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
-    evaluate3 (device.currentValue("humidity"), device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
+    evaluate3(device.currentValue("humidity"), device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
 }
 
 def setCO2Alert(value){
