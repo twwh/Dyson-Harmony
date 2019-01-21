@@ -28,16 +28,16 @@ metadata {
             state "heat", label: "heat", icon: "st.Appliances.appliances11", backgroundColor: "#ff6699"
             }
      	standardTile("linkoff", "device.thermostatMode", width: 3, height: 2, canChangeIcon: true, decoration: "flat") {
-			state "off", label: "Off", action: "thermostatMode.off", icon: "st.Appliances.appliances11", backgroundColor: "#ffffff"
+			state "off", label: "Off", action: "off", icon: "st.Appliances.appliances11", backgroundColor: "#ffffff"
             }
 		standardTile("linkauto", "device.thermostatMode", width: 3, height: 2, canChangeIcon: true, decoration: "flat") {
-			state "auto", label: "Auto", action: "thermostatMode.auto", icon: "st.Weather.weather2", backgroundColor: "#ffffff"
+			state "auto", label: "Auto", action: "auto", icon: "st.Weather.weather2", backgroundColor: "#ffffff"
             }
         standardTile("linkcool", "device.thermostatMode", width: 3, height: 2, canChangeIcon: true, decoration: "flat") {
-			state "cool", label: "Cool", action: "thermostatMode.cool", icon: "st.Weather.weather1", backgroundColor: "#ffffff"
+			state "cool", label: "Cool", action: "cool", icon: "st.Weather.weather1", backgroundColor: "#ffffff"
             }
         standardTile("linkheat", "device.thermostatMode", width: 3, height: 2, canChangeIcon: true, decoration: "flat") {
-            state "heat", label: "Heat", action: "thermostatMode.heat", icon: "st.Weather.weather14", backgroundColor: "#ffffff"
+            state "heat", label: "Heat", action: "heat", icon: "st.Weather.weather14", backgroundColor: "#ffffff"
             }   
         main("link")
 	}
@@ -58,6 +58,7 @@ def cool() {
 def heat() {
     sendEvent(name: "thermostatMode", value: "heat")
 }
+
 def setThermostatMode(value) {
 	sendEvent(name: "thermostatMode", value: value)
 }
