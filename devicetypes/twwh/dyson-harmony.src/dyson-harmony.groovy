@@ -19,7 +19,7 @@ metadata {
         capability "Thermostat"
         capability "Switch"
 	}
-    
+   
 	tiles(scale:2) {
     	standardTile("link", "device.thermostatMode", width: 6, height: 4, canChangeIcon: true) {
 			state "off", label: "off", icon: "st.Appliances.appliances11", backgroundColor: "#ffffff"
