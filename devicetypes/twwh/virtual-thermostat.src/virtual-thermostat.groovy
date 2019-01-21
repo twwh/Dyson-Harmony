@@ -85,6 +85,7 @@ metadata {
 				]
 			)
 		}
+        
         controlTile("heatingSetpointSlider", "device.heatingSetpoint", "slider", width: 2, height: 2, inactiveLabel: false, range:"(10..40)") {
             state "level", label:'Heat to ${currentValue}°C', unit: "°", action:"setHeatingSetpoint", backgroundColor: "#e86d13"
     	}	
@@ -97,11 +98,11 @@ metadata {
         controlTile("humiditySetpointSlider", "device.humiditySetpoint", "slider", width: 2, height: 2, inactiveLabel: false, range:"(30..70)") {
             state "level", label:'Humidify to ${currentValue}%', unit: "%", action:"setHumiditySetpoint", backgroundColor: "#153591"
     	}
-        standardTile("mode", "device.thermostatMode", width: 2, height: 2, inactiveLabel: false, decoration: "flat") {
-			state "off", label:'Off', action:"on", backgroundColor:"#ffffff"
-            state "auto", label:'Auto', action:"cool", backgroundColor:"#44b621"
-			state "cool", label:'Cool', action:"heat", backgroundColor:"#00A0DC"
-            state "heat", label:'Heat', action:"off", backgroundColor:"#e86d13"
+        valueTile("mode", "device.thermostatMode", width: 2, height: 2) {
+			state "off", label:'Off', action: "on", backgroundColor:"#778899"
+            state "auto", label:'Auto', action: "off", backgroundColor:"#44b621"
+			state "cool", label:'Cool', action: "off", backgroundColor:"#00A0DC"
+            state "heat", label:'Heat', action: "off", backgroundColor:"#e86d13"
 		}
 		valueTile("CO2", "device.CO2Alert", width: 2, height: 2) {
     		state "1", label: 'Safe', backgroundColor:"#44b621"
@@ -109,15 +110,23 @@ metadata {
             state "3", label: 'Cautious', backgroundColor: "#f07800"
             state "4", label: 'Harmful', backgroundColor:"#bc2323"
         }
-
+        valueTile("humidifiervalue", "device.humidifier", width: 2, height: 2) {
+    		state "on", label: 'On', icon: "st.Weather.weather10", backgroundColor:"#ffffff"
+            state "off", label: 'Off', icon: "st.Weather.weather10", backgroundColor:"#ffffff"
+        }
+        standardTile("modecool", "device.thermostatMode", width: 2, height: 2, canChangeIcon: true, decoration: "flat") {
+			state "cool", label: "Cool", action: "cool", icon: "st.Weather.weather1", backgroundColor: "#ffffff"
+        }
+        standardTile("modeheat", "device.thermostatMode", width: 2, height: 2, canChangeIcon: true, decoration: "flat") {
+            state "heat", label: "Heat", action: "heat", icon: "st.Weather.weather14", backgroundColor: "#ffffff"
+        }        
+        
 		main("temperature")
 		details([
 			"thermostatFull",
-			"heatingSetpointSlider",
-            "thermostatSetpointSlider",
-			"coolingSetpointSlider",
-            "humiditySetpointSlider",
-            "CO2", "mode"
+			"heatingSetpointSlider", "thermostatSetpointSlider", "coolingSetpointSlider",
+            "humiditySetpointSlider", "CO2", "mode" , 
+            "humidifiervalue", "modeheat", "modecool"
 		])
 	}
 }
@@ -206,6 +215,7 @@ def setCoolingSetpoint(value) {
 def setThermostatMode(value) {
 	sendEvent(name: "thermostatMode", value: value)
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+    evaluate3(device.currentValue("humidity"), device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
 }
 
 def off() {
