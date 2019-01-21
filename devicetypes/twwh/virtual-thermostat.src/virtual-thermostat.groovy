@@ -99,7 +99,7 @@ metadata {
             state "level", label:'Humidify to ${currentValue}%', unit: "%", action:"setHumiditySetpoint", backgroundColor: "#153591"
     	}
         valueTile("mode", "device.thermostatMode", width: 2, height: 2) {
-			state "off", label:'Off', action: "on", backgroundColor:"#778899"
+			state "off", label:'Manual', action: "on", backgroundColor:"#778899"
             state "auto", label:'Auto', action: "off", backgroundColor:"#44b621"
 			state "cool", label:'Cool', action: "off", backgroundColor:"#00A0DC"
             state "heat", label:'Heat', action: "off", backgroundColor:"#e86d13"
@@ -220,12 +220,12 @@ def setThermostatMode(value) {
 
 def off() {
 	sendEvent(name: "thermostatMode", value: "off")
-    sendEvent(name: "humidifier", value: "off")
 }
 
 def heat() {
 	sendEvent(name: "thermostatMode", value: "heat")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+    evaluate3(device.currentValue("humidity"), device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
 }
 
 def auto() {
@@ -236,6 +236,7 @@ def auto() {
 def cool() {
 	sendEvent(name: "thermostatMode", value: "cool")
 	evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+    evaluate3(device.currentValue("humidity"), device.currentValue("humiditySetpoint"), device.currentValue("humidifier"))
 }
 
 def tempUp() {
