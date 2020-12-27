@@ -18,6 +18,8 @@ metadata {
 	definition (name: "Dyson Harmony", namespace: "twwh", author: "Tony Wong") {
         capability "Thermostat"
         capability "Switch"
+        
+        attribute "switch", "enum", ["on", "off"]
 	}
    
 	tiles(scale:2) {
@@ -43,8 +45,14 @@ metadata {
 	}
 }
 
+def on () {
+    sendEvent(name: "thermostatMode", value: "auto")
+    sendEvent(name: "switch", value: "on")
+}
+
 def off() {
     sendEvent(name: "thermostatMode", value: "off")
+    sendEvent(name: "switch", value: "off")
 }
 
 def auto() {
